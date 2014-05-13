@@ -7,7 +7,7 @@ class Diablo3APITest(unittest.TestCase):
 
   def setUp(self):
     self.battle_tag = 'Deo#2188'
-    self.d3 = diablo3_api.Diable3API('eu.battle.net')
+    self.d3 = diablo3_api.Diablo3API('eu.battle.net')
 
   def test_get_career_orig(self):
     golden = 'http://eu.battle.net/api/d3/profile/Deo-2188/'

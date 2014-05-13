@@ -1,12 +1,13 @@
 """wrapper of Blizzard diablo3 web api."""
 import json
 import logging
+import sys
 import urllib2
 
 import utils
 
 
-class Diable3API(object):
+class Diablo3API(object):
 
   def __init__(self, battle_net_host):
     self.host = battle_net_host
@@ -16,13 +17,36 @@ class Diable3API(object):
     self.follower_types = ('enchantress', 'templar', 'scoundrel')
     self.artisan_types = ('blacksmith', 'jeweler', 'mystic')
 
+    self.logger = logging.getLogger(__name__)
+    self.set_logger()
+
+  def set_logger(self):
+    # TODO: implement the logger configuration.
+    self.logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    self.logger.addHandler(ch)
+
   def get_url(func):
-    def decorated(*args, **kwargs):
-      url = func(*args, **kwargs)
-      result = urllib2.urlopen(url)
+    """Decorator to get json object from a URL link and do proper logging."""
+    def decorated(self, *args, **kwargs):
+      url = func(self, *args, **kwargs)
+      self.logger.info('Retrieving data from %s', url)
+      try:
+        result = urllib2.urlopen(url)
+      except urllib2.HTTPError as err:
+        self.logger.error('HTTPError %d: %s', err.code, err.reason)
+      except urllib2.URLError as err:
+        self.logger.error('URLError %d: %s', err.code, err.reason)
       if result.getcode() == 200:
+        self.logger.info('Retrieved data from %s', url)
         return json.loads(result.read())
-      # TODO: handle non-200 errors
+      else:
+        self.logger.error('Unknown HTTP status code %d', result.getcode())
+    # Injection for testing purpose.
     decorated._original = func
     return decorated
 
